@@ -1,0 +1,195 @@
+---
+title: "Data Analysis"
+author: ''
+date: "27/04/2023"
+---
+## Introduction
+In this paper, the military spending on a nation's or residents' economic well being  has been investigated with the help of attractive as well as interactive visualization tools, like R studio. The paper also demonstrates several data visualizations built with the computer language R and the ggplot2 package, such as choropleth maps, bar plots, scatter plots, time series graphics, and line charts. These graphical visualizations are also intended in order to aid in the discovery of patterns and disparities in GDP per capita, population trends, and life expectancy across countries and across time. These visualizations' insights can assist organizations like UNICEF identify key areas for intervention and measure progress towards their goals.
+The United Nations Children's Fund (UNICEF) created a database that provides the details  about the worldwide military spending through specific countries over the years.  With the help of this data visualization, organizations can easily understand the current status as well as awareness about worldwide military spending. 
+
+```{r}
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(psych)
+library(maps)
+library(mapdata)
+library(mapproj)
+library(dplyr)
+library(tidyr)
+```
+
+### Dataset Load
+```{r}
+unicef_metadata <- read.csv("D:/Dataset/unicef_metadata.csv")
+```
+
+```{r}
+head(unicef_metadata)
+```
+
+## Data Preprocessing Steps perfomed here
+```{r}
+str(unicef_metadata)
+```
+
+
+```{r}
+names(unicef_metadata)
+```
+
+
+```{r}
+summary(unicef_metadata)
+```
+
+
+```{r}
+sum(is.na(unicef_metadata))
+```
+```{r}
+unicef_metadata_data <- na.omit(unicef_metadata)
+```
+
+
+```{r}
+sum(is.na(unicef_metadata_data))
+```
+
+
+```{r}
+# Compute descriptive statistics for each column
+desc <- describe(unicef_metadata_data)
+
+# Display the descriptive statistics in a table format
+print(desc, row.names=FALSE)
+```
+
+## Interactive Visualization story
+
+
+The problem that the corporation wants to bring to light is the effect of *military spending* on the economic health of a nation or citizens. The expenditure on defense has a direct influence on the progress of a nation, as the goal of this representation aims to highlight how this effect varies by nation along with population.
+
+## World Map Chart
+```{r}
+# Group the data by country and select the latest year data
+unicef_data_latest <- unicef_metadata_data %>%
+  group_by(country) %>%
+  filter(year == max(year))
+
+# Here, data has been merged with the world map
+map_data <- map_data("world")
+worldmerged_data <- merge(map_data, unicef_data_latest, by.x = "region", by.y = "country")
+
+# Plotting the world-map
+map <- ggplot(worldmerged_data, aes(x = long, y = lat, group = group, fill = GDP.per.capita..constant.2015.US..)) +
+  geom_polygon() +
+  scale_fill_gradient(low = "white", high = "red", na.value = "grey50") +
+  labs(title = "GDP per capita in 2015 (constant USD)", fill = "GDP per capita") +
+  theme_void()
+map
+```
+
+
+The given code manipulates data and visualizes it in R using the ggplot2 library. It looks to be creating a choropleth map of the planet, with color gradients showing GDP per capita in 2015 (constant USD).  The first section of the code organizes the data by nation and uses the filter function to choose the most recent year's data. This phase aids in the elimination of duplicates as well as ensures that only the most recent data for every nation is utilized. The merge function is used in the second portion of the code to combine the filtered information with the globe map data. Finally, the choropleth map is created using the ggplot function (Patil, 2021). The color gradient used for the fill is defined by the scale_fill_gradient function, while the title and legend labels are specified by the labs function. This sort of data visualization may help uncover patterns and discrepancies in GDP per capita across regions, which can help influence decision-making and resource allocation in areas like poverty reduction and economic growth.
+
+
+# Bar chart of GDP per capita via country
+
+```{r}
+barplot(unicef_metadata_data$GDP.per.capita..constant.2015.US.., 
+        names.arg = unicef_metadata_data$country, 
+        main = "GDP per capita by country",
+        xlab = "Country",
+        ylab = "GDP per capita (constant 2015 US$)")
+```
+
+
+Here, bar plot has been created with the utilization of “GDP per capita column and country column” of the UNICEF organizations dataset. From the above graphs, it can be summarized that Latvia county has the highest GDP rates as compared to the other countries. The bar plot can assist UNICEF organizations in analyzing GDP per capita in various nations and identifying which countries have the greatest and poorest GDP per capita. This data can help UNICEF organizations decide how to allocate resources and prioritize efforts for nations with a smaller gross domestic product per capita (Kaya et al. 2019). It may also aid in policy choices and the identification of prospective areas for socioeconomic growth and development.
+
+
+
+```{r}
+ggplot(unicef_metadata_data, aes(x = country, y = Military.expenditure....of.GDP.)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Military expenditure as % of GDP by country",
+       x = "Country",
+       y = "Military expenditure (% of GDP)")
+```
+
+### Scatter Plot with linear Line
+```{r}
+ggplot(data = unicef_metadata_data, aes(x = GDP.per.capita..constant.2015.US.., y = Life.expectancy.at.birth..total..years.)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(x = "GDP per capita (constant 2015 US$)", y = "Life expectancy at birth (total years)", title = "Relationship between GDP per capita and life expectancy")
+```
+
+> The code is employed to generate a scatter plot using a linear regression line connecting two variables, which are GDP per capita (constant 2015 US dollars) as well as life expectancy at birth (total years).
+
+
+The scatter plot using the regression line can assist the UNICEF organization in identifying the association among GDP per capita as well as life expectancy, which may prove valuable for a variety of reasons. It also identifies which nations have the greatest and poorest life expectancy and GDP, as well as any patterns or trends. Aside from that, it can track developments in life expectancy and GDP over time as well as identify nations that are trailing or making progress. In general, the scatter plot may help UNICEF make based on data choices and actions that support improved well-being and growth in the economy.
+
+
+## Time Series plot
+
+```{r}
+# Convert year column to date format
+unicef_metadata_data$year <- as.Date(paste0(unicef_metadata_data$year, "-01-01"))
+# Create a line chart with year and GDP per capita
+ggplot(unicef_metadata_data, aes(x = year, y = GDP.per.capita..constant.2015.US.., color = country)) +
+  geom_line() +
+  labs(title = "GDP per Capita between  Time",
+       x = "Year",
+       y = "GDP per Capita (constant 2015 US$)",
+       color = "Country")
+```
+
+
+The code has been written in R and employs the ggplot2 tool to generate a line chart depicting GDP per capita for various nations through time. The first section of code changes the "year" column from a character or integer type to a date format in the "unicef_metadata_data" data frame. It does this by concatenating "-01-01" to the final portion of each year by employing the "as.Date" function and the "paste0" method. This constructs a date object with the month as well as the day constantly set to January 1st of the provided year (Wickham et al. 2019). This sort of graphic might be beneficial for recognising how GDP per capita in different nations has evolved over time, which could assist guide policies linked to financial growth, reducing poverty, along with social welfare programmes.
+
+
+
+```{r}
+# Create the time series plot
+ggplot(data = unicef_metadata_data, aes(x = year, y = Population..total, group = country, color = country)) +
+  geom_line() +
+  labs(title = "Total Population Over Time",
+       x = "Year",
+       y = "Total Population",
+       color = "Country") +
+  theme_bw()
+```
+
+
+The programmes above are employed to generate a time series graphic in the programming language of R using the ggplot2 package. The graph depicts the total population of various nations throughout time. On the other hand, time series plots like this one may be valuable for spotting recurring patterns and trends regarding population data, which can help guide decisions about resource allocation, programme planning, and policy creation. UNICEF may acquire insights into whether nations are experiencing population increase, decrease, or stagnation by visualizing population changes through time, and build plans to meet the needs of these people.
+
+
+
+## Line chart of population over time for a specific country
+
+```{r}
+country <- "United States"
+data_filtered <- unicef_metadata_data[unicef_metadata_data$country == country,]
+
+ggplot(data_filtered, aes(x = year, y = Population..total)) +
+  geom_line() +
+  labs(title = paste0("Population over time in ", country),
+       x = "Year",
+       y = "Population")
+```
+
+
+This code helps to generate a line graph depicting the population trends over the years in the nation indicated by the variable "country" (in this example, "United States"). The population statistics may be used to assist UNICEF in understanding demographic changes in a particular nation and how they may influence the organization's activities. For example, if the population is rapidly rising, UNICEF may need to change its ways of providing medical care, education, and various other services to suit the requirements of additional people (Dibia and Demiralp, 2019). The chart could additionally be utilized for sending this information to parties like politicians and supporters, helping them to make more informed choices.
+
+## Conclusion
+In the end, the interactive visualization story created around the impact of military expenditure on a nation's or residents' financial condition gives significant information to the UNICEF organization to use in making educated decisions regarding the allocation of resources, policy development, or programme planning. The story provides a complete view of GDP per capita, life expectancy, population trends, and their interrelationships across numerous nations utilizing data visualization approaches such as choropleth maps, bar plots, scatter plots, line charts, as well as time series graphs. Further, these visualization approaches aid in spotting trends and anomalies in economic data, following changes over time as well as highlighting problem areas.
+
+## References Lists
+Patil, I., 2021. Visualizations with statistical details: The'ggstatsplot'approach. Journal of Open Source Software, 6(61), p.3167.
+
+Kaya, E., Agca, M., Adiguzel, F. and Cetin, M., 2019. Spatial data analysis with R programming for environment. Human and ecological risk assessment: An International Journal, 25(6), pp.1521-1530.
+
+Wickham, H., Averick, M., Bryan, J., Chang, W., McGowan, L.D.A., François, R., Grolemund, G., Hayes, A., Henry, L., Hester, J. and Kuhn, M., 2019. Welcome to the Tidyverse. Journal of open source software, 4(43), p.1686.
+
+Dibia, V. and Demiralp, Ç., 2019. Data2vis: Automatic generation of data visualizations using sequence-to-sequence recurrent neural networks. IEEE computer graphics and applications, 39(5), pp.33-46.
